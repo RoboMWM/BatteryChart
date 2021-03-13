@@ -9,6 +9,20 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-
+        <ScrollViewer>
+            <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" >
+                <StackPanel VerticalAlignment="Center" Margin="15,30,0,0" >
+                    <RadioButton x:Name="AggregateButton" Content="Aggregate results" GroupName="Type" IsChecked="True" />
+                    <RadioButton x:Name="IndividualButton" Content="Individual results" GroupName="Type" IsChecked="False" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="GetBatteryReportButton" 
+                Content="Get battery report" 
+                Margin="15,15,0,0" 
+                Click="GetBatteryReport"/>
+                </StackPanel>
+                <StackPanel x:Name="BatteryReportPanel" Margin="15,15,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Page>
