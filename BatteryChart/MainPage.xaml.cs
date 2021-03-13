@@ -39,18 +39,9 @@ namespace BatteryChart
         {
             // Clear UI
             BatteryReportPanel.Children.Clear();
-
-
-            if (AggregateButton.IsChecked == true)
-            {
-                // Request aggregate battery report
-                RequestAggregateBatteryReport();
-            }
-            else
-            {
-                // Request individual battery report
-                RequestIndividualBatteryReports();
-            }
+            
+            // Request aggregate battery report
+            RequestAggregateBatteryReport();
 
             // Note request
             reportRequested = true;
@@ -66,27 +57,6 @@ namespace BatteryChart
 
             // Update UI
             AddReportUI(BatteryReportPanel, report, aggBattery.DeviceId);
-        }
-
-        async private void RequestIndividualBatteryReports()
-        {
-            // Find batteries 
-            var deviceInfo = await DeviceInformation.FindAllAsync(Battery.GetDeviceSelector());
-            foreach (DeviceInformation device in deviceInfo)
-            {
-                try
-                {
-                    // Create battery object
-                    var battery = await Battery.FromIdAsync(device.Id);
-
-                    // Get report
-                    var report = battery.GetReport();
-
-                    // Update UI
-                    AddReportUI(BatteryReportPanel, report, battery.DeviceId);
-                }
-                catch { /* Add error handling, as applicable */ }
-            }
         }
 
 
@@ -162,17 +132,8 @@ namespace BatteryChart
                     // Clear UI
                     BatteryReportPanel.Children.Clear();
 
-
-                    if (AggregateButton.IsChecked == true)
-                    {
-                        // Request aggregate battery report
-                        RequestAggregateBatteryReport();
-                    }
-                    else
-                    {
-                        // Request individual battery report
-                        RequestIndividualBatteryReports();
-                    }
+                    // Request aggregate battery report
+                    RequestAggregateBatteryReport();
                 });
             }
         }
