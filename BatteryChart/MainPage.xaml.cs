@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,7 @@ using Windows.Devices.Power;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,12 +28,15 @@ namespace BatteryChart
     public sealed partial class MainPage : Page
     {
         bool reportRequested = false;
+        private BatteryReport batteryReport;
+
         public MainPage()
         {
             this.InitializeComponent();
             Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated;
             RequestAggregateBatteryReport();
             reportRequested = true;
+            UpdateTileInfo();
         }
 
 
@@ -53,10 +58,10 @@ namespace BatteryChart
             var aggBattery = Battery.AggregateBattery;
 
             // Get report
-            var report = aggBattery.GetReport();
+            batteryReport = aggBattery.GetReport();
 
             // Update UI
-            AddReportUI(BatteryReportPanel, report, aggBattery.DeviceId);
+            AddReportUI(BatteryReportPanel, batteryReport, aggBattery.DeviceId);
         }
 
 
@@ -136,6 +141,81 @@ namespace BatteryChart
                     RequestAggregateBatteryReport();
                 });
             }
+        }
+
+        private void UpdateTileInfo()
+        {
+            string from = ((Convert.ToDouble(batteryReport.RemainingCapacityInMilliwattHours) / Convert.ToDouble(batteryReport.FullChargeCapacityInMilliwattHours)) * 100).ToString("F2") + " % ";
+
+            string subject = "Discharging";
+            if (batteryReport.ChargeRateInMilliwatts > 0)
+                subject = "Charging";
+            string body = batteryReport.ChargeRateInMilliwatts.ToString() + "mW";
+
+
+            // Construct the tile content
+            TileContent content = new TileContent()
+            {
+                Visual = new TileVisual()
+                {
+                    TileMedium = new TileBinding()
+                    {
+                        Content = new TileBindingContentAdaptive()
+                        {
+                            Children =
+                            {
+                                new AdaptiveText()
+                                {
+                                    Text = from
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = subject,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = body,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                }
+                            }
+                        }
+                    },
+
+                    TileWide = new TileBinding()
+                    {
+                        Content = new TileBindingContentAdaptive()
+                        {
+                            Children =
+                            {
+                                new AdaptiveText()
+                                {
+                                    Text = from,
+                                    HintStyle = AdaptiveTextStyle.Subtitle
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = subject,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = body,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            TileNotification notification = new TileNotification(content.GetXml());
+            notification.ExpirationTime = DateTimeOffset.UtcNow.AddMinutes(15);
+            TileUpdateManager.CreateTileUpdaterForApplication().Update(notification);
         }
     }
 }

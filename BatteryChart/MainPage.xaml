@@ -10,18 +10,12 @@
 
     <Page.BottomAppBar>
         <CommandBar>
-            <AppBarToggleButton Icon="Refresh" Label="Refresh" Click="GetBatteryReport"/>
+            <AppBarButton Icon="Refresh" Label="Refresh" Click="GetBatteryReport"/>
         </CommandBar>
     </Page.BottomAppBar>
 
     <ScrollViewer>
         <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" >
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="GetBatteryReportButton" 
-            Content="Refresh report" 
-            Margin="15,15,0,0" 
-            Click="GetBatteryReport"/>
-            </StackPanel>
             <StackPanel x:Name="BatteryReportPanel" Margin="15,15,0,0"/>
         </StackPanel>
     </ScrollViewer>
