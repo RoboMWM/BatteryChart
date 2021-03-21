@@ -44,15 +44,15 @@ namespace BatteryChart
 
         private void GetBatteryReport(object sender, RoutedEventArgs e)
         {
-            // Clear UI
-            BatteryReportPanel.Children.Clear();
-            
             // Request aggregate battery report
             RequestAggregateBatteryReport();
         }
 
         private void RequestAggregateBatteryReport()
         {
+            // Clear UI
+            BatteryReportPanel.Children.Clear();
+
             Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated;
 
             // Create aggregate battery object
@@ -143,13 +143,11 @@ namespace BatteryChart
             });
         }
 
-        private void UpdateTileInfo()
+        private void UpdateTileInfo() //TODO add report as param instead of global variable laziness
         {
             string from = ((Convert.ToDouble(batteryReport.RemainingCapacityInMilliwattHours) / Convert.ToDouble(batteryReport.FullChargeCapacityInMilliwattHours)) * 100).ToString("F2") + " % ";
 
-            string subject = "Discharging";
-            if (batteryReport.ChargeRateInMilliwatts > 0)
-                subject = "Charging";
+            string subject = batteryReport.Status.ToString();
             string body = batteryReport.ChargeRateInMilliwatts.ToString() + "mW";
 
 
