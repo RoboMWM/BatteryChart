@@ -27,16 +27,18 @@ namespace BatteryChart
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        bool reportRequested = false;
         private BatteryReport batteryReport;
 
         public MainPage()
         {
             this.InitializeComponent();
-            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated;
+            Application.Current.Resuming += new EventHandler<Object>(ResumingListener);
             RequestAggregateBatteryReport();
-            reportRequested = true;
-            UpdateTileInfo();
+        }
+
+        private void ResumingListener(Object sender, Object e)
+        {
+            RequestAggregateBatteryReport();
         }
 
 
@@ -47,13 +49,12 @@ namespace BatteryChart
             
             // Request aggregate battery report
             RequestAggregateBatteryReport();
-
-            // Note request
-            reportRequested = true;
         }
 
         private void RequestAggregateBatteryReport()
         {
+            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated;
+
             // Create aggregate battery object
             var aggBattery = Battery.AggregateBattery;
 
@@ -62,6 +63,9 @@ namespace BatteryChart
 
             // Update UI
             AddReportUI(BatteryReportPanel, batteryReport, aggBattery.DeviceId);
+
+            // Update Tile
+            UpdateTileInfo();
         }
 
 
@@ -129,18 +133,14 @@ namespace BatteryChart
 
         async private void AggregateBattery_ReportUpdated(Battery sender, object args)
         {
-            if (reportRequested)
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                // Clear UI
+                BatteryReportPanel.Children.Clear();
 
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    // Clear UI
-                    BatteryReportPanel.Children.Clear();
-
-                    // Request aggregate battery report
-                    RequestAggregateBatteryReport();
-                });
-            }
+                // Request aggregate battery report
+                RequestAggregateBatteryReport();
+            });
         }
 
         private void UpdateTileInfo()
