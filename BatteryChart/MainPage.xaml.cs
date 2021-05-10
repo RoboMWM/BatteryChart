@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Background;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Power;
 using Windows.Foundation;
@@ -27,6 +28,43 @@ namespace BatteryChart
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            RegisterBackgroundTask();
+        }
+
+        private async void RegisterBackgroundTask()
+        {
+            BackgroundExecutionManager.RemoveAccess();
+            await BackgroundExecutionManager.RequestAccessAsync();
+            const string taskName = "BatteryTileBackgroundTask";
+            const string taskEntryPoint = "BackgroundTasks.BatteryTileBackgroundTask";
+            BackgroundAccessStatus backgroundAccessStatus = await BackgroundExecutionManager.RequestAccessAsync();
+            if (backgroundAccessStatus == BackgroundAccessStatus.AllowedSubjectToSystemPolicy ||
+                backgroundAccessStatus == BackgroundAccessStatus.AlwaysAllowed)
+            {
+                foreach (var task in BackgroundTaskRegistration.AllTasks)
+                {
+                    if (task.Value.Name == taskName)
+                    {
+                        task.Value.Unregister(true);
+                    }
+                }
+
+                BackgroundTaskBuilder taskBuilder = new BackgroundTaskBuilder();
+                taskBuilder.Name = taskName;
+                taskBuilder.TaskEntryPoint = taskEntryPoint;
+                taskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.PowerStateChange, false));
+                BackgroundTaskRegistration registration = taskBuilder.Register();
+
+                BackgroundTaskBuilder taskBuilderTimer = new BackgroundTaskBuilder();
+                taskBuilderTimer.Name = taskName;
+                taskBuilderTimer.TaskEntryPoint = taskEntryPoint;
+                taskBuilderTimer.SetTrigger(new TimeTrigger(15, false));
+                taskBuilderTimer.Register();
+            }
+        }
+
         private BatteryReport batteryReport;
 
         public MainPage()
