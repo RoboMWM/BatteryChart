@@ -28,6 +28,7 @@ namespace BatteryChart
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private BackgroundAccessStatus backgroundAccessStatus;
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             RegisterBackgroundTask();
@@ -39,30 +40,27 @@ namespace BatteryChart
             await BackgroundExecutionManager.RequestAccessAsync();
             const string taskName = "BatteryTileBackgroundTask";
             const string taskEntryPoint = "BackgroundTasks.BatteryTileBackgroundTask";
-            BackgroundAccessStatus backgroundAccessStatus = await BackgroundExecutionManager.RequestAccessAsync();
-            if (backgroundAccessStatus == BackgroundAccessStatus.AllowedSubjectToSystemPolicy ||
-                backgroundAccessStatus == BackgroundAccessStatus.AlwaysAllowed)
+            backgroundAccessStatus = await BackgroundExecutionManager.RequestAccessAsync();
+
+            foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
-                foreach (var task in BackgroundTaskRegistration.AllTasks)
+                if (task.Value.Name == taskName)
                 {
-                    if (task.Value.Name == taskName)
-                    {
-                        task.Value.Unregister(true);
-                    }
+                    task.Value.Unregister(true);
                 }
-
-                BackgroundTaskBuilder taskBuilder = new BackgroundTaskBuilder();
-                taskBuilder.Name = taskName;
-                taskBuilder.TaskEntryPoint = taskEntryPoint;
-                taskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.PowerStateChange, false));
-                BackgroundTaskRegistration registration = taskBuilder.Register();
-
-                BackgroundTaskBuilder taskBuilderTimer = new BackgroundTaskBuilder();
-                taskBuilderTimer.Name = taskName;
-                taskBuilderTimer.TaskEntryPoint = taskEntryPoint;
-                taskBuilderTimer.SetTrigger(new TimeTrigger(15, false));
-                taskBuilderTimer.Register();
             }
+
+            BackgroundTaskBuilder taskBuilder = new BackgroundTaskBuilder();
+            taskBuilder.Name = taskName;
+            taskBuilder.TaskEntryPoint = taskEntryPoint;
+            taskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.PowerStateChange, false));
+            BackgroundTaskRegistration registration = taskBuilder.Register();
+
+            BackgroundTaskBuilder taskBuilderTimer = new BackgroundTaskBuilder();
+            taskBuilderTimer.Name = taskName;
+            taskBuilderTimer.TaskEntryPoint = taskEntryPoint;
+            taskBuilderTimer.SetTrigger(new TimeTrigger(15, false));
+            taskBuilderTimer.Register();
         }
 
         private BatteryReport batteryReport;
@@ -157,6 +155,9 @@ namespace BatteryChart
                 pbPercent.Text = ((pb.Value / pb.Maximum) * 100).ToString("F2") + "%";
             }
 
+            TextBlock accessStatusBlock = new TextBlock();
+            accessStatusBlock.Text = backgroundAccessStatus.ToString();
+
             // Add controls to stackpanel
             sp.Children.Add(txt1);
             sp.Children.Add(txt2);
@@ -167,6 +168,13 @@ namespace BatteryChart
             sp.Children.Add(pbLabel);
             sp.Children.Add(pb);
             sp.Children.Add(pbPercent);
+            sp.Children.Add(accessStatusBlock);
+            foreach (var task in BackgroundTaskRegistration.AllTasks)
+            {
+                TextBlock bgBlock = new TextBlock();
+                bgBlock.Text = task.Value.Name;
+                sp.Children.Add(bgBlock);
+            }
         }
 
         async private void AggregateBattery_ReportUpdated(Battery sender, object args)

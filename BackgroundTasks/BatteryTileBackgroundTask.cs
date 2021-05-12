@@ -17,6 +17,7 @@ namespace BackgroundTasks
             //BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
 
             UpdateTileInfo(Battery.AggregateBattery.GetReport());
+            SendToast("background task executed");
 
             //deferral.Complete();
         }
@@ -92,6 +93,40 @@ namespace BackgroundTasks
             TileNotification notification = new TileNotification(content.GetXml());
             notification.ExpirationTime = DateTimeOffset.UtcNow.AddMinutes(15);
             TileUpdateManager.CreateTileUpdaterForApplication().Update(notification);
+        }
+
+        /// <summary>
+        /// Simple method to show a basic toast with a message.
+        /// </summary>
+        /// <param name="message"></param>
+        private void SendToast(string message)
+        {
+            ToastContent content = new ToastContent()
+            {
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = message
+                            }
+                        }
+                    }
+                },
+
+                //Audio = new ToastAudio()
+                //{
+                //    Src = new Uri(sound)
+                //}
+            };
+
+            ToastNotification toast = new ToastNotification(content.GetXml());
+            //toast.ExpirationTime = DateTime.Now.AddSeconds(600);
+
+            ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
     }
 }
