@@ -61,6 +61,24 @@ namespace BatteryChart
             taskBuilderTimer.TaskEntryPoint = taskEntryPoint;
             taskBuilderTimer.SetTrigger(new TimeTrigger(15, false));
             taskBuilderTimer.Register();
+
+            BackgroundTaskBuilder taskBuilderUnlock = new BackgroundTaskBuilder();
+            taskBuilderUnlock.Name = taskName;
+            taskBuilderUnlock.TaskEntryPoint = taskEntryPoint;
+            taskBuilderUnlock.SetTrigger(new SystemTrigger(SystemTriggerType.UserPresent, false));
+            taskBuilderUnlock.Register();
+
+            BackgroundTaskBuilder taskBuilderLock = new BackgroundTaskBuilder();
+            taskBuilderLock.Name = taskName;
+            taskBuilderLock.TaskEntryPoint = taskEntryPoint;
+            taskBuilderLock.SetTrigger(new SystemTrigger(SystemTriggerType.UserAway, false));
+            taskBuilderLock.Register();
+
+            BackgroundTaskBuilder taskBuilderManualTrigger = new BackgroundTaskBuilder();
+            taskBuilderManualTrigger.Name = taskName;
+            taskBuilderManualTrigger.TaskEntryPoint = taskEntryPoint;
+            taskBuilderManualTrigger.SetTrigger(new ApplicationTrigger());
+            taskBuilderManualTrigger.Register();
         }
 
         private BatteryReport batteryReport;
@@ -69,22 +87,22 @@ namespace BatteryChart
         {
             this.InitializeComponent();
             Application.Current.Resuming += new EventHandler<Object>(ResumingListener);
-            RequestAggregateBatteryReport();
+            RequestAggregateBatteryReportAsync();
         }
 
         private void ResumingListener(Object sender, Object e)
         {
-            RequestAggregateBatteryReport();
+            RequestAggregateBatteryReportAsync();
         }
 
 
         private void GetBatteryReport(object sender, RoutedEventArgs e)
         {
             // Request aggregate battery report
-            RequestAggregateBatteryReport();
+            RequestAggregateBatteryReportAsync();
         }
 
-        private void RequestAggregateBatteryReport()
+        private async void RequestAggregateBatteryReportAsync()
         {
             // Clear UI
             BatteryReportPanel.Children.Clear();
@@ -100,8 +118,8 @@ namespace BatteryChart
             // Update UI
             AddReportUI(BatteryReportPanel, batteryReport, aggBattery.DeviceId);
 
-            // Update Tile
-            UpdateTileInfo();
+            // Update Tile (via background task)
+            await new ApplicationTrigger().RequestAsync();
         }
 
 
@@ -185,7 +203,7 @@ namespace BatteryChart
                 BatteryReportPanel.Children.Clear();
 
                 // Request aggregate battery report
-                RequestAggregateBatteryReport();
+                RequestAggregateBatteryReportAsync();
             });
         }
 
