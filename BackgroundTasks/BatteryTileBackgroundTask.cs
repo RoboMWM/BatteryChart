@@ -1,11 +1,8 @@
 ﻿using Microsoft.Toolkit.Uwp.Notifications;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Devices.Power;
+using Windows.Storage;
 using Windows.UI.Notifications;
 
 namespace BackgroundTasks
@@ -14,12 +11,13 @@ namespace BackgroundTasks
     {
         public void Run(IBackgroundTaskInstance taskInstance)
         {
-            //BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
+            BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
 
             UpdateTileInfo(Battery.AggregateBattery.GetReport());
-            SendToast("background task executed");
+            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+            WriteTimestamp(localFolder);
 
-            //deferral.Complete();
+            deferral.Complete();
         }
 
         private void UpdateTileInfo(BatteryReport batteryReport) //TODO add report as param instead of global variable laziness
@@ -28,6 +26,7 @@ namespace BackgroundTasks
 
             string subject = batteryReport.Status.ToString();
             string body = batteryReport.ChargeRateInMilliwatts.ToString() + "mW";
+            string footer = DateTime.Now.ToString();
 
 
             // Construct the tile content
@@ -49,12 +48,18 @@ namespace BackgroundTasks
                                 new AdaptiveText()
                                 {
                                     Text = subject,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                    //HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 },
 
                                 new AdaptiveText()
                                 {
                                     Text = body,
+                                    //HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = footer,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 }
                             }
@@ -127,6 +132,17 @@ namespace BackgroundTasks
             //toast.ExpirationTime = DateTime.Now.AddSeconds(600);
 
             ToastNotificationManager.CreateToastNotifier().Show(toast);
+        }
+
+        // Write data to a file
+        private async void WriteTimestamp(StorageFolder localFolder)
+        {
+            Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter =
+                new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
+
+            StorageFile sampleFile = await localFolder.CreateFileAsync("dataFile.txt",
+                CreationCollisionOption.ReplaceExisting);
+            await FileIO.WriteTextAsync(sampleFile, formatter.Format(DateTime.Now));
         }
     }
 }

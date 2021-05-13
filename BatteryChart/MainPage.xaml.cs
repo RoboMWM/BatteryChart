@@ -1,14 +1,17 @@
 ﻿using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Power;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
@@ -28,7 +31,9 @@ namespace BatteryChart
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        string lastRun = "retrieving...";
         private BackgroundAccessStatus backgroundAccessStatus;
+        private ApplicationTrigger backgroundManualTrigger = new ApplicationTrigger();
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             RegisterBackgroundTask();
@@ -68,16 +73,16 @@ namespace BatteryChart
             taskBuilderUnlock.SetTrigger(new SystemTrigger(SystemTriggerType.UserPresent, false));
             taskBuilderUnlock.Register();
 
-            BackgroundTaskBuilder taskBuilderLock = new BackgroundTaskBuilder();
-            taskBuilderLock.Name = taskName;
-            taskBuilderLock.TaskEntryPoint = taskEntryPoint;
-            taskBuilderLock.SetTrigger(new SystemTrigger(SystemTriggerType.UserAway, false));
-            taskBuilderLock.Register();
+            //BackgroundTaskBuilder taskBuilderLock = new BackgroundTaskBuilder();
+            //taskBuilderLock.Name = taskName;
+            //taskBuilderLock.TaskEntryPoint = taskEntryPoint;
+            //taskBuilderLock.SetTrigger(new SystemTrigger(SystemTriggerType.UserAway, false));
+            //taskBuilderLock.Register();
 
             BackgroundTaskBuilder taskBuilderManualTrigger = new BackgroundTaskBuilder();
             taskBuilderManualTrigger.Name = taskName;
             taskBuilderManualTrigger.TaskEntryPoint = taskEntryPoint;
-            taskBuilderManualTrigger.SetTrigger(new ApplicationTrigger());
+            taskBuilderManualTrigger.SetTrigger(backgroundManualTrigger);
             taskBuilderManualTrigger.Register();
         }
 
@@ -87,22 +92,22 @@ namespace BatteryChart
         {
             this.InitializeComponent();
             Application.Current.Resuming += new EventHandler<Object>(ResumingListener);
-            RequestAggregateBatteryReportAsync();
+            RequestAggregateBatteryReport();
         }
 
         private void ResumingListener(Object sender, Object e)
         {
-            RequestAggregateBatteryReportAsync();
+            RequestAggregateBatteryReport();
         }
 
 
         private void GetBatteryReport(object sender, RoutedEventArgs e)
         {
             // Request aggregate battery report
-            RequestAggregateBatteryReportAsync();
+            RequestAggregateBatteryReport();
         }
 
-        private async void RequestAggregateBatteryReportAsync()
+        private void RequestAggregateBatteryReport()
         {
             // Clear UI
             BatteryReportPanel.Children.Clear();
@@ -116,14 +121,13 @@ namespace BatteryChart
             batteryReport = aggBattery.GetReport();
 
             // Update UI
-            AddReportUI(BatteryReportPanel, batteryReport, aggBattery.DeviceId);
+            AddReportUIAsync(BatteryReportPanel, batteryReport, aggBattery.DeviceId);
 
-            // Update Tile (via background task)
-            await new ApplicationTrigger().RequestAsync();
+            UpdateTileInfoAsync();
         }
 
 
-        private void AddReportUI(StackPanel sp, BatteryReport report, string DeviceID)
+        private async void AddReportUIAsync(StackPanel sp, BatteryReport report, string DeviceID)
         {
             // Create battery report UI
             TextBlock txt1 = new TextBlock { Text = "Device ID: " + DeviceID };
@@ -193,6 +197,10 @@ namespace BatteryChart
                 bgBlock.Text = task.Value.Name;
                 sp.Children.Add(bgBlock);
             }
+            TextBlock timestamps = new TextBlock();
+            lastRun = await ReadTimestamp(ApplicationData.Current.LocalFolder);
+            timestamps.Text = lastRun;
+            sp.Children.Add(timestamps);
         }
 
         async private void AggregateBattery_ReportUpdated(Battery sender, object args)
@@ -203,81 +211,41 @@ namespace BatteryChart
                 BatteryReportPanel.Children.Clear();
 
                 // Request aggregate battery report
-                RequestAggregateBatteryReportAsync();
+                RequestAggregateBatteryReport();
             });
         }
 
-        private void UpdateTileInfo() //TODO add report as param instead of global variable laziness
+        private async System.Threading.Tasks.Task UpdateTileInfoAsync() //TODO add report as param instead of global variable laziness
         {
-            string from = ((Convert.ToDouble(batteryReport.RemainingCapacityInMilliwattHours) / Convert.ToDouble(batteryReport.FullChargeCapacityInMilliwattHours)) * 100).ToString("F2") + " % ";
+            //Update Tile (via background task)
+            await backgroundManualTrigger.RequestAsync();
+        }
 
-            string subject = batteryReport.Status.ToString();
-            string body = batteryReport.ChargeRateInMilliwatts.ToString() + "mW";
-
-
-            // Construct the tile content
-            TileContent content = new TileContent()
+        // Read data from a file
+        private async Task<string> ReadTimestamp(StorageFolder localFolder)
+        {
+            try
             {
-                Visual = new TileVisual()
+                StorageFile sampleFile = await localFolder.GetFileAsync("dataFile.txt");
+                String timestamp = await FileIO.ReadTextAsync(sampleFile);
+                return timestamp;
+                // Data is contained in timestamp
+            }
+            catch (FileNotFoundException e)
+            {
+                // Cannot find file
+            }
+            catch (IOException e)
+            {
+                // Get information from the exception, then throw
+                // the info to the parent method.
+                if (e.Source != null)
                 {
-                    TileMedium = new TileBinding()
-                    {
-                        Content = new TileBindingContentAdaptive()
-                        {
-                            Children =
-                            {
-                                new AdaptiveText()
-                                {
-                                    Text = from
-                                },
-
-                                new AdaptiveText()
-                                {
-                                    Text = subject,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
-                                },
-
-                                new AdaptiveText()
-                                {
-                                    Text = body,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
-                                }
-                            }
-                        }
-                    },
-
-                    TileWide = new TileBinding()
-                    {
-                        Content = new TileBindingContentAdaptive()
-                        {
-                            Children =
-                            {
-                                new AdaptiveText()
-                                {
-                                    Text = from,
-                                    HintStyle = AdaptiveTextStyle.Subtitle
-                                },
-
-                                new AdaptiveText()
-                                {
-                                    Text = subject,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
-                                },
-
-                                new AdaptiveText()
-                                {
-                                    Text = body,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
-                                }
-                            }
-                        }
-                    }
+                    Debug.WriteLine("IOException source: {0}", e.Source);
                 }
-            };
-
-            TileNotification notification = new TileNotification(content.GetXml());
-            notification.ExpirationTime = DateTimeOffset.UtcNow.AddMinutes(15);
-            TileUpdateManager.CreateTileUpdaterForApplication().Update(notification);
+                throw;
+            }
+            return "file not found";
         }
     }
 }
