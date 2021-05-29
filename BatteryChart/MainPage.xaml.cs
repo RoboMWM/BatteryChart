@@ -31,7 +31,6 @@ namespace BatteryChart
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        string lastRun = "retrieving...";
         private BackgroundAccessStatus backgroundAccessStatus;
         private ApplicationTrigger backgroundManualTrigger = new ApplicationTrigger();
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -127,7 +126,7 @@ namespace BatteryChart
         }
 
 
-        private async void AddReportUIAsync(StackPanel sp, BatteryReport report, string DeviceID)
+        private void AddReportUIAsync(StackPanel sp, BatteryReport report, string DeviceID)
         {
             // Create battery report UI
             TextBlock txt1 = new TextBlock { Text = "Device ID: " + DeviceID };
@@ -197,10 +196,6 @@ namespace BatteryChart
                 bgBlock.Text = task.Value.Name;
                 sp.Children.Add(bgBlock);
             }
-            TextBlock timestamps = new TextBlock();
-            lastRun = await ReadTimestamp(ApplicationData.Current.LocalFolder);
-            timestamps.Text = lastRun;
-            sp.Children.Add(timestamps);
         }
 
         async private void AggregateBattery_ReportUpdated(Battery sender, object args)
@@ -219,33 +214,6 @@ namespace BatteryChart
         {
             //Update Tile (via background task)
             await backgroundManualTrigger.RequestAsync();
-        }
-
-        // Read data from a file
-        private async Task<string> ReadTimestamp(StorageFolder localFolder)
-        {
-            try
-            {
-                StorageFile sampleFile = await localFolder.GetFileAsync("dataFile.txt");
-                String timestamp = await FileIO.ReadTextAsync(sampleFile);
-                return timestamp;
-                // Data is contained in timestamp
-            }
-            catch (FileNotFoundException e)
-            {
-                // Cannot find file
-            }
-            catch (IOException e)
-            {
-                // Get information from the exception, then throw
-                // the info to the parent method.
-                if (e.Source != null)
-                {
-                    Debug.WriteLine("IOException source: {0}", e.Source);
-                }
-                throw;
-            }
-            return "file not found";
         }
     }
 }

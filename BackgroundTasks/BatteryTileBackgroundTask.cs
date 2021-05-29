@@ -14,8 +14,7 @@ namespace BackgroundTasks
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
 
             UpdateTileInfo(Battery.AggregateBattery.GetReport());
-            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
-            WriteTimestamp(localFolder);
+            //StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 
             deferral.Complete();
         }
@@ -132,17 +131,6 @@ namespace BackgroundTasks
             //toast.ExpirationTime = DateTime.Now.AddSeconds(600);
 
             ToastNotificationManager.CreateToastNotifier().Show(toast);
-        }
-
-        // Write data to a file
-        private async void WriteTimestamp(StorageFolder localFolder)
-        {
-            Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter =
-                new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
-
-            StorageFile sampleFile = await localFolder.CreateFileAsync("dataFile.txt",
-                CreationCollisionOption.ReplaceExisting);
-            await FileIO.WriteTextAsync(sampleFile, formatter.Format(DateTime.Now));
         }
     }
 }
