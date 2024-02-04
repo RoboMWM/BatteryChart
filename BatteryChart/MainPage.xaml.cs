@@ -14,6 +14,7 @@ using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -123,6 +124,9 @@ namespace BatteryChart
             AddReportUIAsync(BatteryReportPanel, batteryReport, aggBattery.DeviceId);
 
             UpdateTileInfoAsync();
+
+            // Log entry
+            //LogReport(batteryReport);
         }
 
 
@@ -198,6 +202,13 @@ namespace BatteryChart
             }
         }
 
+        //TODO This is probably not good/blocking call?
+        private void AddLogEntriesUIAsync()
+        {
+            TextBlock textBlock = new TextBlock { Text = retrieveLogAsync().Result };
+            BatteryReportPanel.Children.Add(textBlock); //TODO: clear before you do this
+        }
+
         async private void AggregateBattery_ReportUpdated(Battery sender, object args)
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -210,10 +221,36 @@ namespace BatteryChart
             });
         }
 
-        private async System.Threading.Tasks.Task UpdateTileInfoAsync() //TODO add report as param instead of global variable laziness
+        private async System.Threading.Tasks.Task UpdateTileInfoAsync() //TODO add report as param instead of global variable laziness //TODO is that todo even possible?
         {
             //Update Tile (via background task)
             await backgroundManualTrigger.RequestAsync();
+        }
+
+        private async void LogReport(BatteryReport report)
+        {
+            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+            try
+            {
+                StorageFile reportsFile = await localFolder.CreateFileAsync("reportsFile.txt", CreationCollisionOption.OpenIfExists);
+                await FileIO.WriteTextAsync(reportsFile, report.RemainingCapacityInMilliwattHours.ToString());
+            }
+            catch (Exception e)
+            {
+                await new MessageDialog("error occurred when logging message", "uh oh spaghettio").ShowAsync();
+            }
+        }
+
+        private async Task<string> retrieveLogAsync()
+        {
+            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+            StorageFile reportsFile = await localFolder.GetFileAsync("reportsFile.txt");
+            return await FileIO.ReadTextAsync(reportsFile);
+        }
+
+        private void LogsButton(object sender, RoutedEventArgs e)
+        {
+            //AddLogEntriesUIAsync();
         }
     }
 }

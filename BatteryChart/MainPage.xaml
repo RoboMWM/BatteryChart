@@ -11,6 +11,7 @@
     <Page.BottomAppBar>
         <CommandBar>
             <AppBarButton Icon="Refresh" Label="Refresh" Click="GetBatteryReport"/>
+            <AppBarButton Label="Logs" Click="LogsButton" Icon="AlignLeft"/>
         </CommandBar>
     </Page.BottomAppBar>
 
