@@ -147,31 +147,20 @@ namespace BackgroundTasks
         {
             try
             {
-                StorageFolder localFolder = null;
-
-                try
-                {
-                    localFolder = ApplicationData.Current.LocalFolder;
-                }
-                catch (Exception e)
-                {
-                    SendToast("a bad folder thingy");
-                }
-
+                StorageFolder localFolder = ApplicationData.Current.LocalFolder;
                 StorageFile file = null;
+
                 try
                 {
                     file = await localFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
                 }
                 catch (Exception e)
                 {
-                    SendToast("a bad thing happened when trying to write to a file.");
+                    //SendToast("a bad thing happened when trying to write to a file.");
                 }
 
                 if (file == null)
                     return;
-
-                //SemaphoreSlim sSlim = new SemaphoreSlim(1);
 
                 try
                 {
@@ -180,11 +169,7 @@ namespace BackgroundTasks
                 }
                 catch (Exception e)
                 {
-                    SendToast("no " + e.Message);
-                }
-                finally
-                {
-                    //sSlim.Release();
+                    //SendToast("no " + e.Message);
                 }
             }
 
