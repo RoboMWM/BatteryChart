@@ -46,40 +46,48 @@ namespace BatteryChart
             const string taskEntryPoint = "BackgroundTasks.BatteryTileBackgroundTask";
             backgroundAccessStatus = await BackgroundExecutionManager.RequestAccessAsync();
 
-            foreach (var task in BackgroundTaskRegistration.AllTasks)
+            try
             {
-                if (task.Value.Name == taskName)
+                foreach (var task in BackgroundTaskRegistration.AllTasks)
                 {
-                    task.Value.Unregister(true);
+                    //if (task.Value.Name == taskName)
+                    {
+                        task.Value.Unregister(true);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                SendToast("asynclaunch " + e.Message);
+            }
+            
 
             BackgroundTaskBuilder taskBuilder = new BackgroundTaskBuilder();
-            taskBuilder.Name = taskName;
+            taskBuilder.Name = taskName + "powerstate";
             taskBuilder.TaskEntryPoint = taskEntryPoint;
             taskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.PowerStateChange, false));
             BackgroundTaskRegistration registration = taskBuilder.Register();
 
             BackgroundTaskBuilder taskBuilderTimer = new BackgroundTaskBuilder();
-            taskBuilderTimer.Name = taskName;
+            taskBuilderTimer.Name = taskName + "time";
             taskBuilderTimer.TaskEntryPoint = taskEntryPoint;
             taskBuilderTimer.SetTrigger(new TimeTrigger(15, false));
             taskBuilderTimer.Register();
 
             BackgroundTaskBuilder taskBuilderUnlock = new BackgroundTaskBuilder();
-            taskBuilderUnlock.Name = taskName;
+            taskBuilderUnlock.Name = taskName + "userpresent";
             taskBuilderUnlock.TaskEntryPoint = taskEntryPoint;
             taskBuilderUnlock.SetTrigger(new SystemTrigger(SystemTriggerType.UserPresent, false));
             taskBuilderUnlock.Register();
 
-            //BackgroundTaskBuilder taskBuilderLock = new BackgroundTaskBuilder();
-            //taskBuilderLock.Name = taskName;
-            //taskBuilderLock.TaskEntryPoint = taskEntryPoint;
-            //taskBuilderLock.SetTrigger(new SystemTrigger(SystemTriggerType.UserAway, false));
-            //taskBuilderLock.Register();
+            BackgroundTaskBuilder taskBuilderLock = new BackgroundTaskBuilder();
+            taskBuilderLock.Name = taskName + "useraway";
+            taskBuilderLock.TaskEntryPoint = taskEntryPoint;
+            taskBuilderLock.SetTrigger(new SystemTrigger(SystemTriggerType.UserAway, false));
+            taskBuilderLock.Register();
 
             BackgroundTaskBuilder taskBuilderManualTrigger = new BackgroundTaskBuilder();
-            taskBuilderManualTrigger.Name = taskName;
+            taskBuilderManualTrigger.Name = taskName + "manual";
             taskBuilderManualTrigger.TaskEntryPoint = taskEntryPoint;
             taskBuilderManualTrigger.SetTrigger(backgroundManualTrigger);
             taskBuilderManualTrigger.Register();
@@ -214,6 +222,64 @@ namespace BatteryChart
         {
             //Update Tile (via background task)
             await backgroundManualTrigger.RequestAsync();
+        }
+
+        private async void SetLogBlockAsync()
+        {
+            TextBlock logBlock = new TextBlock();
+            LogPanel.Children.Clear();
+
+            try
+            {
+                StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+                StorageFile sampleFile = await localFolder.GetFileAsync("dataFile.txt");
+                logBlock.Text = await FileIO.ReadTextAsync(sampleFile);
+            }
+            catch (Exception e)
+            {
+                logBlock.Text = e.Message;
+            }
+
+            LogPanel.Children.Add(logBlock);
+        }
+
+        private void AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetLogBlockAsync();
+        }
+
+        /// <summary>
+        /// Simple method to show a basic toast with a message.
+        /// </summary>
+        /// <param name="message"></param>
+        private void SendToast(string message)
+        {
+            ToastContent content = new ToastContent()
+            {
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = message
+                            }
+                        }
+                    }
+                },
+
+                //Audio = new ToastAudio()
+                //{
+                //    Src = new Uri(sound)
+                //}
+            };
+
+            ToastNotification toast = new ToastNotification(content.GetXml());
+            //toast.ExpirationTime = DateTime.Now.AddSeconds(600);
+
+            ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
     }
 }

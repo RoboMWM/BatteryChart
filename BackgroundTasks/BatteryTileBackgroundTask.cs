@@ -1,5 +1,8 @@
 ﻿using Microsoft.Toolkit.Uwp.Notifications;
 using System;
+using System.Text;
+using System.Threading;
+using Windows.ApplicationModel.AppService;
 using Windows.ApplicationModel.Background;
 using Windows.Devices.Power;
 using Windows.Storage;
@@ -14,9 +17,16 @@ namespace BackgroundTasks
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
 
             UpdateTileInfo(Battery.AggregateBattery.GetReport());
-            //StorageFolder localFolder = ApplicationData.Current.LocalFolder;
 
-            deferral.Complete();
+            Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
+            StringBuilder sb = new StringBuilder();
+            sb.Append(formatter.Format(DateTime.Now));
+            sb.AppendLine(taskInstance.Task.Name);
+            //sb.Append(taskInstance.TriggerDetails.ToString());
+            //sb.Append(Environment.NewLine);
+            WriteToFile("dataFile.txt", sb.ToString(), deferral);
+
+            //deferral.Complete(); //Maybe this is being called prematurely?
         }
 
         private void UpdateTileInfo(BatteryReport batteryReport) //TODO add report as param instead of global variable laziness
@@ -131,6 +141,59 @@ namespace BackgroundTasks
             //toast.ExpirationTime = DateTime.Now.AddSeconds(600);
 
             ToastNotificationManager.CreateToastNotifier().Show(toast);
+        }
+
+        private async void WriteToFile(string fileName, string content, BackgroundTaskDeferral deferral)
+        {
+            try
+            {
+                StorageFolder localFolder = null;
+
+                try
+                {
+                    localFolder = ApplicationData.Current.LocalFolder;
+                }
+                catch (Exception e)
+                {
+                    SendToast("a bad folder thingy");
+                }
+
+                StorageFile file = null;
+                try
+                {
+                    file = await localFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
+                }
+                catch (Exception e)
+                {
+                    SendToast("a bad thing happened when trying to write to a file.");
+                }
+
+                if (file == null)
+                    return;
+
+                //SemaphoreSlim sSlim = new SemaphoreSlim(1);
+
+                try
+                {
+                    //await sSlim.WaitAsync();
+                    await FileIO.WriteTextAsync(file, content + await FileIO.ReadTextAsync(file));
+                }
+                catch (Exception e)
+                {
+                    SendToast("no " + e.Message);
+                }
+                finally
+                {
+                    //sSlim.Release();
+                }
+            }
+
+            catch (Exception e)
+            {
+                SendToast("why");
+            }
+
+            deferral.Complete();
         }
     }
 }

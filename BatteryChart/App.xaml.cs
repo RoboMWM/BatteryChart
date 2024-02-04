@@ -30,6 +30,11 @@ namespace BatteryChart
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            this.UnhandledException += (sender, e) =>
+            {
+                e.Handled = true;
+                System.Diagnostics.Debug.WriteLine("oivey" + e.Message + e.Exception);
+            };
         }
 
         /// <summary>

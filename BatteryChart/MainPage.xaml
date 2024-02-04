@@ -11,12 +11,14 @@
     <Page.BottomAppBar>
         <CommandBar>
             <AppBarButton Icon="Refresh" Label="Refresh" Click="GetBatteryReport"/>
+            <AppBarButton Icon="TwoPage" Label="Print Logs" Click="AppBarButton_Click"/>
         </CommandBar>
     </Page.BottomAppBar>
 
     <ScrollViewer>
         <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" >
             <StackPanel x:Name="BatteryReportPanel" Margin="15,15,0,0"/>
+            <StackPanel x:Name="LogPanel" Margin="15,15,0,0"/>
         </StackPanel>
     </ScrollViewer>
 </Page>
