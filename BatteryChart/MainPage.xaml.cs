@@ -60,34 +60,34 @@ namespace BatteryChart
             {
                 SendToast("asynclaunch " + e.Message);
             }
-            
+
 
             BackgroundTaskBuilder taskBuilder = new BackgroundTaskBuilder();
-            taskBuilder.Name = taskName + "powerstate";
+            taskBuilder.Name = "powerstate" + taskName;
             taskBuilder.TaskEntryPoint = taskEntryPoint;
             taskBuilder.SetTrigger(new SystemTrigger(SystemTriggerType.PowerStateChange, false));
             BackgroundTaskRegistration registration = taskBuilder.Register();
 
             BackgroundTaskBuilder taskBuilderTimer = new BackgroundTaskBuilder();
-            taskBuilderTimer.Name = taskName + "time";
+            taskBuilderTimer.Name = "time" + taskName;
             taskBuilderTimer.TaskEntryPoint = taskEntryPoint;
             taskBuilderTimer.SetTrigger(new TimeTrigger(15, false));
             taskBuilderTimer.Register();
 
             BackgroundTaskBuilder taskBuilderUnlock = new BackgroundTaskBuilder();
-            taskBuilderUnlock.Name = taskName + "userpresent";
+            taskBuilderUnlock.Name = "userpresent" + taskName;
             taskBuilderUnlock.TaskEntryPoint = taskEntryPoint;
             taskBuilderUnlock.SetTrigger(new SystemTrigger(SystemTriggerType.UserPresent, false));
             taskBuilderUnlock.Register();
 
             BackgroundTaskBuilder taskBuilderLock = new BackgroundTaskBuilder();
-            taskBuilderLock.Name = taskName + "useraway";
+            taskBuilderLock.Name = "useraway" + taskName;
             taskBuilderLock.TaskEntryPoint = taskEntryPoint;
             taskBuilderLock.SetTrigger(new SystemTrigger(SystemTriggerType.UserAway, false));
             taskBuilderLock.Register();
 
             BackgroundTaskBuilder taskBuilderManualTrigger = new BackgroundTaskBuilder();
-            taskBuilderManualTrigger.Name = taskName + "manual";
+            taskBuilderManualTrigger.Name = "manual" + taskName;
             taskBuilderManualTrigger.TaskEntryPoint = taskEntryPoint;
             taskBuilderManualTrigger.SetTrigger(backgroundManualTrigger);
             taskBuilderManualTrigger.Register();
@@ -99,27 +99,27 @@ namespace BatteryChart
         {
             this.InitializeComponent();
             Application.Current.Resuming += new EventHandler<Object>(ResumingListener);
-            RequestAggregateBatteryReport();
+            RequestAggregateBatteryReport("initialized");
         }
 
         private void ResumingListener(Object sender, Object e)
         {
-            RequestAggregateBatteryReport();
+            RequestAggregateBatteryReport("resuming");
         }
 
 
         private void GetBatteryReport(object sender, RoutedEventArgs e)
         {
             // Request aggregate battery report
-            RequestAggregateBatteryReport();
+            RequestAggregateBatteryReport("button");
         }
 
-        private void RequestAggregateBatteryReport()
+        private void RequestAggregateBatteryReport(string reason)
         {
             // Clear UI
             BatteryReportPanel.Children.Clear();
 
-            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated;
+            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated; //????? I think this is the cause of app freezing on resuming...
 
             // Create aggregate battery object
             var aggBattery = Battery.AggregateBattery;
@@ -130,7 +130,7 @@ namespace BatteryChart
             // Update UI
             AddReportUIAsync(BatteryReportPanel, batteryReport, aggBattery.DeviceId);
 
-            UpdateTileInfoAsync();
+            UpdateTileInfoAsync(reason);
         }
 
 
@@ -214,14 +214,16 @@ namespace BatteryChart
                 BatteryReportPanel.Children.Clear();
 
                 // Request aggregate battery report
-                RequestAggregateBatteryReport();
+                RequestAggregateBatteryReport("async updated???"); //very confused what I'm doing here
             });
         }
 
-        private async System.Threading.Tasks.Task UpdateTileInfoAsync() //TODO add report as param instead of global variable laziness
+        private async System.Threading.Tasks.Task UpdateTileInfoAsync(string reason) //TODO add report as param instead of global variable laziness
         {
             //Update Tile (via background task)
-            await backgroundManualTrigger.RequestAsync();
+            ValueSet reasonSet = new ValueSet();
+            reasonSet.Add("reason", reason);
+            await backgroundManualTrigger.RequestAsync(reasonSet);
         }
 
         private async void SetLogBlockAsync()

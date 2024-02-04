@@ -16,7 +16,7 @@ namespace BackgroundTasks
         {
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
 
-            UpdateTileInfo(Battery.AggregateBattery.GetReport());
+            UpdateTileInfo(Battery.AggregateBattery.GetReport(), taskInstance);
 
             Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
             StringBuilder sb = new StringBuilder();
@@ -29,13 +29,13 @@ namespace BackgroundTasks
             //deferral.Complete(); //Maybe this is being called prematurely?
         }
 
-        private void UpdateTileInfo(BatteryReport batteryReport) //TODO add report as param instead of global variable laziness
+        private void UpdateTileInfo(BatteryReport batteryReport, IBackgroundTaskInstance taskInstance) //TODO add report as param instead of global variable laziness
         {
             string from = ((Convert.ToDouble(batteryReport.RemainingCapacityInMilliwattHours) / Convert.ToDouble(batteryReport.FullChargeCapacityInMilliwattHours)) * 100).ToString("F2") + " % ";
 
             string subject = batteryReport.Status.ToString();
-            string body = batteryReport.ChargeRateInMilliwatts.ToString() + "mW";
-            string footer = DateTime.Now.ToString();
+            string body = batteryReport.ChargeRateInMilliwatts.ToString() + "mW\n" + DateTime.Now.ToString();
+            string footer = taskInstance.Task.Name;
 
 
             // Construct the tile content
