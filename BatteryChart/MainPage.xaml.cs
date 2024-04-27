@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Windows.Devices.Enumeration;
@@ -32,7 +33,8 @@ namespace BatteryChart
     public sealed partial class MainPage : Page
     {
         private BackgroundAccessStatus backgroundAccessStatus;
-        private ApplicationTrigger backgroundManualTrigger = new ApplicationTrigger();
+        private ApplicationTrigger backgroundManualTrigger;
+        private string unregisteredTasks = "";
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             RegisterBackgroundTask();
@@ -42,16 +44,22 @@ namespace BatteryChart
         {
             BackgroundExecutionManager.RemoveAccess();
             await BackgroundExecutionManager.RequestAccessAsync();
-            const string taskName = "BatteryTileBackgroundTask";
+            const string taskName = "BTBT"; //BatteryTileBackgroundTask
             const string taskEntryPoint = "BackgroundTasks.BatteryTileBackgroundTask";
             backgroundAccessStatus = await BackgroundExecutionManager.RequestAccessAsync();
 
+            backgroundManualTrigger = new ApplicationTrigger();
+
+            StringBuilder sb = new StringBuilder();
             try
             {
+                Debug.Write("unregistering background tasks");
                 foreach (var task in BackgroundTaskRegistration.AllTasks)
                 {
                     //if (task.Value.Name == taskName)
                     {
+                        Debug.WriteLine(task.Value.Name);
+                        sb.AppendLine(task.Value.Name);
                         task.Value.Unregister(true);
                     }
                 }
@@ -60,6 +68,8 @@ namespace BatteryChart
             {
                 SendToast("asynclaunch " + e.Message);
             }
+
+            unregisteredTasks = sb.ToString();
 
 
             BackgroundTaskBuilder taskBuilder = new BackgroundTaskBuilder();
@@ -150,6 +160,7 @@ namespace BatteryChart
             TextBlock txt4 = new TextBlock { Text = "Design energy capacity (mWh): " + report.DesignCapacityInMilliwattHours.ToString() };
             TextBlock txt5 = new TextBlock { Text = "Fully-charged energy capacity (mWh): " + report.FullChargeCapacityInMilliwattHours.ToString() };
             TextBlock txt6 = new TextBlock { Text = "Remaining energy capacity (mWh): " + report.RemainingCapacityInMilliwattHours.ToString() };
+            TextBlock txt7 = new TextBlock { Text = "Unregistered: " + unregisteredTasks };
 
             // Create energy capacity progress bar & labels
             TextBlock pbLabel = new TextBlock { Text = "Percent remaining energy capacity" };
@@ -194,6 +205,7 @@ namespace BatteryChart
             sp.Children.Add(txt4);
             sp.Children.Add(txt5);
             sp.Children.Add(txt6);
+            sp.Children.Add(txt7);
             sp.Children.Add(pbLabel);
             sp.Children.Add(pb);
             sp.Children.Add(pbPercent);
@@ -228,21 +240,17 @@ namespace BatteryChart
 
         private async void SetLogBlockAsync()
         {
-            TextBlock logBlock = new TextBlock();
-            LogPanel.Children.Clear();
-
             try
             {
                 StorageFolder localFolder = ApplicationData.Current.LocalFolder;
                 StorageFile sampleFile = await localFolder.GetFileAsync("dataFile.txt");
-                logBlock.Text = await FileIO.ReadTextAsync(sampleFile);
+                LogBlock.Text = await FileIO.ReadTextAsync(sampleFile);
             }
             catch (Exception e)
             {
-                logBlock.Text = e.Message;
+                LogBlock.Text = e.Message;
             }
 
-            LogPanel.Children.Add(logBlock);
         }
 
         private void AppBarButton_Click(object sender, RoutedEventArgs e)

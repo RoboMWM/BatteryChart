@@ -12,16 +12,29 @@ namespace BackgroundTasks
 {
     public sealed class BatteryTileBackgroundTask : IBackgroundTask
     {
+        private Guid taskId;
+        private Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter;
+        private string timeStamp;
+
         public void Run(IBackgroundTaskInstance taskInstance)
         {
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
+            formatter = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
+            timeStamp = formatter.Format(DateTime.Now);
+            taskId = taskInstance.InstanceId;
 
             UpdateTileInfo(Battery.AggregateBattery.GetReport(), taskInstance);
 
-            Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
             StringBuilder sb = new StringBuilder();
-            sb.Append(formatter.Format(DateTime.Now));
-            sb.AppendLine(taskInstance.Task.Name);
+            sb.Append(timeStamp);
+            if (taskInstance.TriggerDetails != null)
+            {
+                ApplicationTriggerDetails details = (ApplicationTriggerDetails)taskInstance.TriggerDetails;
+                sb.AppendLine(details.Arguments["reason"].ToString());
+            }
+            
+            sb.AppendLine(taskInstance.Task.Name + taskId);
+            
             //sb.Append(taskInstance.TriggerDetails.ToString());
             //sb.Append(Environment.NewLine);
             WriteToFile("dataFile.txt", sb.ToString(), deferral);
@@ -156,7 +169,7 @@ namespace BackgroundTasks
                 }
                 catch (Exception e)
                 {
-                    //SendToast("a bad thing happened when trying to write to a file.");
+                    SendToast("CreateFile failed. ID: " + taskId + " t: " + timeStamp + " e: " + e.Message);
                 }
 
                 if (file == null)
@@ -169,13 +182,13 @@ namespace BackgroundTasks
                 }
                 catch (Exception e)
                 {
-                    //SendToast("no " + e.Message);
+                    SendToast("WriteText failed. ID " + taskId + " t: " + timeStamp + " e: " + e.Message);
                 }
             }
 
             catch (Exception e)
             {
-                SendToast("why");
+                SendToast("why" + e.Message);
             }
 
             deferral.Complete();

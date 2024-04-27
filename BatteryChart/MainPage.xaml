@@ -18,7 +18,7 @@
     <ScrollViewer>
         <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" >
             <StackPanel x:Name="BatteryReportPanel" Margin="15,15,0,0"/>
-            <StackPanel x:Name="LogPanel" Margin="15,15,0,0"/>
+            <TextBlock x:Name="LogBlock" Margin="15,15,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         </StackPanel>
     </ScrollViewer>
 </Page>
