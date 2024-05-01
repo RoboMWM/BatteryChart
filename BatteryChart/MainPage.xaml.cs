@@ -35,10 +35,6 @@ namespace BatteryChart
         private BackgroundAccessStatus backgroundAccessStatus;
         private ApplicationTrigger backgroundManualTrigger;
         private string unregisteredTasks = "";
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            RegisterBackgroundTask();
-        }
 
         private async void RegisterBackgroundTask()
         {
@@ -69,7 +65,7 @@ namespace BatteryChart
                 SendToast("asynclaunch " + e.Message);
             }
 
-            unregisteredTasks = sb.ToString();
+            unregisteredTasks = sb.ToString(); //TODO: this doesn't update the UI
 
 
             BackgroundTaskBuilder taskBuilder = new BackgroundTaskBuilder();
@@ -109,10 +105,10 @@ namespace BatteryChart
         {
             this.InitializeComponent();
             //This registers a listener for changes to the battery's status. This is why this method should only be called once (usually in constructor)
-            //I have theories why my app was crashing only sometimes on resume, but I'll save that explanation for a commit description or two...
+            //It's not a theory anymore, it was indeed the cause, as I call RequestAggregateBatteryReport from the event listener as well...
             Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated;
             Application.Current.Resuming += new EventHandler<Object>(ResumingListener);
-            RequestAggregateBatteryReport("initialized");
+            RegisterBackgroundTask();
         }
 
         private void ResumingListener(Object sender, Object e)
