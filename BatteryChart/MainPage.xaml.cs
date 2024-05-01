@@ -129,7 +129,7 @@ namespace BatteryChart
             // Clear UI
             BatteryReportPanel.Children.Clear();
 
-            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated; //????? I think this is the cause of app freezing on resuming...
+            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated; //????? I think this is the cause of app freezing on resuming... //Update: yes it is lol. For some reason this method will get called a bazillion times on resume and hang/crash the app. //Ok I looked this up some more, and this is supposed to be only called once to register for report updates... So idk what example I used, it was not correct to do this. Also good reason why you gotta learn the code you're writing/using
 
             // Create aggregate battery object
             var aggBattery = Battery.AggregateBattery;

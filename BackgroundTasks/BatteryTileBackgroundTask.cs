@@ -12,7 +12,7 @@ namespace BackgroundTasks
 {
     public sealed class BatteryTileBackgroundTask : IBackgroundTask
     {
-        private Guid taskId;
+        private string taskId;
         private Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter;
         private string timeStamp;
 
@@ -21,7 +21,7 @@ namespace BackgroundTasks
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
             formatter = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
             timeStamp = formatter.Format(DateTime.Now);
-            taskId = taskInstance.InstanceId;
+            taskId = taskInstance.Task.Name;
 
             UpdateTileInfo(Battery.AggregateBattery.GetReport(), taskInstance);
 
