@@ -108,6 +108,9 @@ namespace BatteryChart
         public MainPage()
         {
             this.InitializeComponent();
+            //This registers a listener for changes to the battery's status. This is why this method should only be called once (usually in constructor)
+            //I have theories why my app was crashing only sometimes on resume, but I'll save that explanation for a commit description or two...
+            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated;
             Application.Current.Resuming += new EventHandler<Object>(ResumingListener);
             RequestAggregateBatteryReport("initialized");
         }
@@ -129,10 +132,10 @@ namespace BatteryChart
             // Clear UI
             BatteryReportPanel.Children.Clear();
 
-            Battery.AggregateBattery.ReportUpdated += AggregateBattery_ReportUpdated; //????? I think this is the cause of app freezing on resuming... //Update: yes it is lol. For some reason this method will get called a bazillion times on resume and hang/crash the app. //Ok I looked this up some more, and this is supposed to be only called once to register for report updates... So idk what example I used, it was not correct to do this. Also good reason why you gotta learn the code you're writing/using
-
             // Create aggregate battery object
-            var aggBattery = Battery.AggregateBattery;
+            // TODO: Only use internal battery:
+            // Phones usually only have one battery, and for laptops like SurfaceBook, we probably only really care about built-in, non-detachable battery
+            Battery aggBattery = Battery.AggregateBattery;
 
             // Get report
             batteryReport = aggBattery.GetReport();
