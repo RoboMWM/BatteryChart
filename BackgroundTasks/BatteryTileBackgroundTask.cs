@@ -12,7 +12,7 @@ namespace BackgroundTasks
 {
     public sealed class BatteryTileBackgroundTask : IBackgroundTask
     {
-        private string taskId;
+        private string taskName;
         private Windows.Globalization.DateTimeFormatting.DateTimeFormatter formatter;
         private string timeStamp;
 
@@ -21,20 +21,31 @@ namespace BackgroundTasks
             BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
             formatter = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("longtime");
             timeStamp = formatter.Format(DateTime.Now);
-            taskId = taskInstance.Task.Name;
+            taskName = taskInstance.Task.Name;
 
-            UpdateTileInfo(Battery.AggregateBattery.GetReport(), taskInstance);
+            BatteryReport batteryReport = Battery.AggregateBattery.GetReport();
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append(timeStamp);
+            string percentage = ((Convert.ToDouble(batteryReport.RemainingCapacityInMilliwattHours) / Convert.ToDouble(batteryReport.FullChargeCapacityInMilliwattHours)) * 100).ToString("F2") + " % ";
+            string state = batteryReport.Status.ToString();
+            string mWh = batteryReport.ChargeRateInMilliwatts.ToString() + "mW\n";
+            string reason = "";
             if (taskInstance.TriggerDetails != null)
             {
                 ApplicationTriggerDetails details = (ApplicationTriggerDetails)taskInstance.TriggerDetails;
-                sb.AppendLine(details.Arguments["reason"].ToString());
+                reason = details.Arguments["reason"].ToString();
             }
-            
-            sb.AppendLine(taskInstance.Task.Name + taskId);
-            
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append(percentage);
+            sb.Append(',');
+            sb.Append(timeStamp);
+            sb.Append(',');
+            sb.Append(taskName);
+            sb.Append(',');
+            sb.AppendLine(reason);
+
+            UpdateTileInfo(percentage, state, mWh, reason + taskName, timeStamp);
+
             //sb.Append(taskInstance.TriggerDetails.ToString());
             //sb.Append(Environment.NewLine);
             WriteToFile("dataFile.txt", sb.ToString(), deferral);
@@ -42,13 +53,11 @@ namespace BackgroundTasks
             //deferral.Complete(); //Maybe this is being called prematurely?
         }
 
-        private void UpdateTileInfo(BatteryReport batteryReport, IBackgroundTaskInstance taskInstance) //TODO add report as param instead of global variable laziness
+        private void UpdateTileInfo(string percentage, string state, string mWh, string taskName, string timeStamp) //TODO add report as param instead of global variable laziness
         {
-            string from = ((Convert.ToDouble(batteryReport.RemainingCapacityInMilliwattHours) / Convert.ToDouble(batteryReport.FullChargeCapacityInMilliwattHours)) * 100).ToString("F2") + " % ";
 
-            string subject = batteryReport.Status.ToString();
-            string body = batteryReport.ChargeRateInMilliwatts.ToString() + "mW\n" + DateTime.Now.ToString();
-            string footer = taskInstance.Task.Name;
+
+
 
 
             // Construct the tile content
@@ -64,24 +73,31 @@ namespace BackgroundTasks
                             {
                                 new AdaptiveText()
                                 {
-                                    Text = from
+                                    Text = percentage,
+                                    HintStyle = AdaptiveTextStyle.Header
                                 },
 
                                 new AdaptiveText()
                                 {
-                                    Text = subject,
+                                    Text = state
                                     //HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 },
 
                                 new AdaptiveText()
                                 {
-                                    Text = body,
+                                    Text = timeStamp
                                     //HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 },
 
                                 new AdaptiveText()
                                 {
-                                    Text = footer,
+                                    Text = taskName
+                                    //HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = mWh,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 }
                             }
@@ -96,19 +112,31 @@ namespace BackgroundTasks
                             {
                                 new AdaptiveText()
                                 {
-                                    Text = from,
-                                    HintStyle = AdaptiveTextStyle.Subtitle
+                                    Text = percentage,
+                                    HintStyle = AdaptiveTextStyle.Header
                                 },
 
                                 new AdaptiveText()
                                 {
-                                    Text = subject,
-                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                    Text = state
+                                    //HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 },
 
                                 new AdaptiveText()
                                 {
-                                    Text = body,
+                                    Text = timeStamp
+                                    //HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = taskName
+                                    //HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                },
+
+                                new AdaptiveText()
+                                {
+                                    Text = mWh,
                                     HintStyle = AdaptiveTextStyle.CaptionSubtle
                                 }
                             }
@@ -123,7 +151,7 @@ namespace BackgroundTasks
         }
 
         /// <summary>
-        /// Simple method to show a basic toast with a message.
+        /// Send silent toast
         /// </summary>
         /// <param name="message"></param>
         private void SendToast(string message)
@@ -144,10 +172,10 @@ namespace BackgroundTasks
                     }
                 },
 
-                //Audio = new ToastAudio()
-                //{
-                //    Src = new Uri(sound)
-                //}
+                Audio = new ToastAudio()
+                {
+                    Silent = true
+                }
             };
 
             ToastNotification toast = new ToastNotification(content.GetXml());
@@ -169,7 +197,7 @@ namespace BackgroundTasks
                 }
                 catch (Exception e)
                 {
-                    SendToast("CreateFile failed. ID: " + taskId + " t: " + timeStamp + " e: " + e.Message);
+                    SendToast("CreateFile failed. ID: " + taskName + " t: " + timeStamp + " e: " + e.Message);
                 }
 
                 if (file == null)
@@ -182,7 +210,7 @@ namespace BackgroundTasks
                 }
                 catch (Exception e)
                 {
-                    SendToast("WriteText failed. ID " + taskId + " t: " + timeStamp + " e: " + e.Message);
+                    SendToast("WriteText failed. ID " + taskName + " t: " + timeStamp + " e: " + e.Message);
                 }
             }
 
