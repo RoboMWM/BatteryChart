@@ -1,0 +1,24 @@
+﻿<Page
+    x:Class="BatteryChart.OptionsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:BatteryChart"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Label="Save" Icon="Save" Click="SaveAppBarButton"/>
+        </CommandBar>
+    </Page.BottomAppBar>
+
+    <ScrollViewer>
+        <ComboBox x:Name="TriggersComboBox" Header="Events to Monitor" Loaded="TriggersComboBox_Loaded">
+            <x:String>All Events</x:String>
+            <x:String>Only plug/unplug</x:String>
+            <x:String>Only wake/sleep</x:String>
+        </ComboBox>
+    </ScrollViewer>
+</Page>
