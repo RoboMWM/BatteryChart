@@ -10,7 +10,7 @@
 
     <Page.BottomAppBar>
         <CommandBar>
-            <AppBarButton Label="Save" Icon="Save" Click="SaveAppBarButton"/>
+            <AppBarButton Label="Save" Icon="Save" Click="SaveAppBarButtonClick"/>
         </CommandBar>
     </Page.BottomAppBar>
 

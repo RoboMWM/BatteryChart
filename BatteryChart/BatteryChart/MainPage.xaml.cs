@@ -15,6 +15,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
+// TODO features cuz I'm too lazy to use issue tracking rn:
+// - Reminder/alert to plug in device if battery is too low of a percentage at night
 
 namespace BatteryChart
 {
@@ -27,6 +29,11 @@ namespace BatteryChart
         {
             this.InitializeComponent();
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
+        }
+
+        private void SettingsAppBarButtonClick(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(SettingsPage), null);
         }
     }
 }

@@ -8,6 +8,12 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Label="Settings" Icon="Setting" Click="SettingsAppBarButtonClick"/>
+        </CommandBar>
+    </Page.BottomAppBar>
+    
     <Grid>
 
     </Grid>

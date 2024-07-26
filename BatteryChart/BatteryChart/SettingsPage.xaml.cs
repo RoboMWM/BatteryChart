@@ -55,7 +55,7 @@ namespace BatteryChart
             BackgroundTaskRegistration registration = taskBuilder.Register();
         }
 
-        private void SaveAppBarButton(object sender, RoutedEventArgs e)
+        private void SaveAppBarButtonClick(object sender, RoutedEventArgs e)
         {
             //TODO: how to handle button spam? Maybe show messagedialog confirming changes?
             RegisterBackgroundTask();
