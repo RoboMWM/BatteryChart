@@ -121,6 +121,7 @@ namespace BatteryChart
                     if (!await RegisterBackgroundTask(new SystemTrigger(SystemTriggerType.UserPresent, false), new SystemTrigger(SystemTriggerType.UserAway, false)))
                         return; //TODO: print error and clear progress ring
                     break;
+                    //TODO: implement other options
             }
 
             ApplyProgressRing.IsActive = false;
