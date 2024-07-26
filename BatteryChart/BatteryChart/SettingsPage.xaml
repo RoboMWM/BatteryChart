@@ -8,17 +8,19 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Page.BottomAppBar>
-        <CommandBar>
-            <AppBarButton Label="Save" Icon="Save" Click="SaveAppBarButtonClick"/>
-        </CommandBar>
-    </Page.BottomAppBar>
-
     <ScrollViewer>
-        <ComboBox x:Name="TriggersComboBox" Header="Events to Monitor" Loaded="TriggersComboBox_Loaded">
-            <x:String>All Events</x:String>
-            <x:String>Only plug/unplug</x:String>
-            <x:String>Only wake/sleep</x:String>
-        </ComboBox>
+        <StackPanel>
+            <ComboBox x:Name="TriggersComboBox" Header="Events to Monitor" Loaded="TriggersComboBox_Loaded" PlaceholderText="Loading...">
+                <x:String>None</x:String>
+                <x:String>All Events</x:String>
+                <x:String>Only plug/unplug</x:String>
+                <x:String>Only wake/sleep</x:String>
+            </ComboBox>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="ApplyButton" Content="Register events" Click="ApplyButton_Click"/>
+                <ProgressRing x:Name="ApplyProgressRing"/>
+            </StackPanel>
+            
+        </StackPanel>
     </ScrollViewer>
 </Page>
