@@ -139,56 +139,6 @@ namespace BatteryChart
             ApplyButton.IsEnabled = true;
         }
 
-        private async void ExportButton_Click(object sender, RoutedEventArgs e)
-        {
-            FileSavePicker savePicker = new FileSavePicker();
-            savePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            savePicker.FileTypeChoices.Add("Comma-Delimited Values", new List<string>() { ".csv" });
-            savePicker.SuggestedFileName = "BatteryLogExport"; //TODO append datetime
-
-            StorageFile logFile = await GetLogAsync("BatteryLog.csv");
-            if (logFile == null)
-            {
-                await new MessageDialog("Log file is empty").ShowAsync();
-                return;
-            }
-
-            StorageFile fileToSaveTo = await savePicker.PickSaveFileAsync();
-            if (fileToSaveTo == null)
-                return;
-
-            CachedFileManager.DeferUpdates(fileToSaveTo);
-            await FileIO.WriteTextAsync(fileToSaveTo, await FileIO.ReadTextAsync(logFile));
-            if (await CachedFileManager.CompleteUpdatesAsync(fileToSaveTo) != Windows.Storage.Provider.FileUpdateStatus.Complete)
-                await new MessageDialog("File could not be saved").ShowAsync();
-            //TODO: success message
-
-        }
-
-        private async void DeleteButton_Click(object sender, RoutedEventArgs e)
-        {
-            StorageFile logFile = await GetLogAsync("BatteryLog.csv");
-            if (logFile == null)
-            {
-                await new MessageDialog("Log file is empty").ShowAsync();
-                return;
-            }
-
-            await FileIO.WriteBytesAsync(logFile, new byte[0]);
-            await new MessageDialog("Logs deleted").ShowAsync(); //TODO validate if log file is empty?
-        }
-
-        private async Task<StorageFile> GetLogAsync(string fileName)
-        {
-            try
-            {
-                StorageFolder localFolder = ApplicationData.Current.LocalFolder;
-                return await localFolder.GetFileAsync(fileName);
-            }
-            catch (FileNotFoundException e)
-            {
-                return null;
-            }
-        }
+        
     }
 }
