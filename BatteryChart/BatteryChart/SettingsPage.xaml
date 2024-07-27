@@ -20,7 +20,11 @@
                 <Button x:Name="ApplyButton" Content="Register events" Click="ApplyButton_Click"/>
                 <ProgressRing x:Name="ApplyProgressRing"/>
             </StackPanel>
-            
+
+            <TextBlock Text="Log File Management"/>
+            <Button x:Name="ExportButton" Content="Export Log" Click="ExportButton_Click"/>
+            <Button x:Name="DeleteButton" Content="Delete Log" Click="DeleteButton_Click"/>
+
         </StackPanel>
     </ScrollViewer>
 </Page>
