@@ -105,6 +105,7 @@ namespace BatteryChart
 
         private async void ApplyButton_Click(object sender, RoutedEventArgs e)
         {
+            ApplyButton.IsEnabled = false;
             ApplyProgressRing.IsActive = true;
 
             switch (TriggersComboBox.SelectedItem)
@@ -125,6 +126,7 @@ namespace BatteryChart
             }
 
             ApplyProgressRing.IsActive = false;
+            ApplyButton.IsEnabled = true;
         }
     }
 }
