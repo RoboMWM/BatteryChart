@@ -50,6 +50,8 @@ namespace BatteryChart
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
         }
 
+        //maybe throw exception instead of returning boolean?
+        //TODO timer is not a SystemTrigger
         private async Task<bool> RegisterBackgroundTask(params SystemTrigger[] triggers)
         {
             if (!await IsBackgroundAccessAllowed())
@@ -73,6 +75,7 @@ namespace BatteryChart
             return true;
         }
 
+        //TODO change to checkbox
         private async void TriggersComboBox_Loaded(object sender, RoutedEventArgs e)
         {
             if (!await IsBackgroundAccessAllowed())
@@ -94,7 +97,7 @@ namespace BatteryChart
             }
 
             if (power && userPresentAway)
-                TriggersComboBox.SelectedItem = "All Events";
+                TriggersComboBox.SelectedItem = "All events";
             else if (power)
                 TriggersComboBox.SelectedItem = "Only plug/unplug";
             else if (userPresentAway)
@@ -122,7 +125,11 @@ namespace BatteryChart
                     if (!await RegisterBackgroundTask(new SystemTrigger(SystemTriggerType.UserPresent, false), new SystemTrigger(SystemTriggerType.UserAway, false)))
                         return; //TODO: print error and clear progress ring
                     break;
-                    //TODO: implement other options
+                case "All events":
+                    if (!await RegisterBackgroundTask(new SystemTrigger(SystemTriggerType.PowerStateChange, false), new SystemTrigger(SystemTriggerType.UserPresent, false),
+                        new SystemTrigger(SystemTriggerType.UserAway, false)))
+                        return;
+                    break;
             }
 
             ApplyProgressRing.IsActive = false;
