@@ -11,10 +11,15 @@
     <Page.BottomAppBar>
         <CommandBar>
             <AppBarButton Label="Settings" Icon="Setting" Click="SettingsAppBarButtonClick"/>
+            <AppBarButton x:Name="ViewLogsAppBarButton" Label="View Logs" Icon="AlignLeft" Click="ViewLogsAppBarButton_Click"/>
         </CommandBar>
     </Page.BottomAppBar>
-    
-    <Grid>
 
-    </Grid>
+    <!-- TODO: pivot view?-->
+    <ScrollViewer>
+        <StackPanel x:Name="BatteryInfoStackPanel">
+            <TextBlock x:Name="BatteryInfoTextBlock" Text="Loading..."/>
+        </StackPanel>
+    </ScrollViewer>
+
 </Page>

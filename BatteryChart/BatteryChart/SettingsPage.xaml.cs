@@ -48,7 +48,6 @@ namespace BatteryChart
 
         public SettingsPage()
         {
-            //TODO: load from file
             this.InitializeComponent();
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
         }
