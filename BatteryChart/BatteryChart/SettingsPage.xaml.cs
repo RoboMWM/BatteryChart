@@ -39,8 +39,11 @@ namespace BatteryChart
             switch (this.backgroundAccessStatus)
             {
                 case BackgroundAccessStatus.DeniedBySystemPolicy:
+                    sendMessageDialog("Background tasks denied by system. Manually set BatteryChart to \"Always allowed\" in Battery Saver.");
+                    return false;
                 case BackgroundAccessStatus.DeniedByUser:
-                    return false; //TODO: error message(?)
+                    sendMessageDialog("You denied BatteryChart from running in the background. Background tasks can't be registered until you change this setting in Battery Saver.");
+                    return false;
                 default:
                     return true;
             }
@@ -50,9 +53,10 @@ namespace BatteryChart
         {
             this.InitializeComponent();
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
+            loadCheckboxes();
         }
 
-        //maybe throw exception instead of returning boolean?
+        //will also print messages to the user if unable to register
         //TODO timer is not a SystemTrigger
         private async Task<bool> RegisterBackgroundTask(params SystemTrigger[] triggers)
         {
@@ -77,35 +81,17 @@ namespace BatteryChart
             return true;
         }
 
-        //TODO change to checkbox
-        private async void TriggersComboBox_Loaded(object sender, RoutedEventArgs e)
+        private void loadCheckboxes()
         {
-            if (!await IsBackgroundAccessAllowed())
-            {
-                TriggersComboBox.PlaceholderText = "Background access denied";
-                return;
-            }
-
-            //All this to avoid a config file
-            bool power = false;
-            bool userPresentAway = false;
-
             foreach (KeyValuePair<Guid, IBackgroundTaskRegistration> task in BackgroundTaskRegistration.AllTasks)
             {
                 if (task.Value.Name == SystemTriggerType.PowerStateChange.ToString())
-                    power = true;
-                else if (task.Value.Name == SystemTriggerType.UserPresent.ToString() || task.Value.Name == SystemTriggerType.UserAway.ToString())
-                    userPresentAway = true;
+                    PowerstateCheckbox.IsChecked = true;
+                else if (task.Value.Name == SystemTriggerType.UserAway.ToString())
+                    UserAwayCheckBox.IsChecked = true;
+                else if (task.Value.Name == SystemTriggerType.UserPresent.ToString())
+                    UserPresentCheckBox.IsChecked = true;
             }
-
-            if (power && userPresentAway)
-                TriggersComboBox.SelectedItem = "All events";
-            else if (power)
-                TriggersComboBox.SelectedItem = "Only plug/unplug";
-            else if (userPresentAway)
-                TriggersComboBox.SelectedItem = "Only wake/sleep";
-            else
-                TriggersComboBox.SelectedItem = "None";
         }
 
         private async void ApplyButton_Click(object sender, RoutedEventArgs e)
@@ -113,29 +99,36 @@ namespace BatteryChart
             ApplyButton.IsEnabled = false;
             ApplyProgressRing.IsActive = true;
 
-            switch (TriggersComboBox.SelectedItem)
+            List<SystemTrigger> tasksToRegister = new List<SystemTrigger>();
+
+            if (PowerstateCheckbox.IsChecked == true)
+                tasksToRegister.Add(new SystemTrigger(SystemTriggerType.PowerStateChange, false));
+            if (UserAwayCheckBox.IsChecked == true)
+                tasksToRegister.Add(new SystemTrigger(SystemTriggerType.UserAway, false));
+            if (UserPresentCheckBox.IsChecked == true)
+                tasksToRegister.Add(new SystemTrigger(SystemTriggerType.UserPresent, false));
+                
+            if (await RegisterBackgroundTask(tasksToRegister.ToArray()))
             {
-                case "None":
-                    if (!await RegisterBackgroundTask())
-                        return;
-                    break;
-                case "Only plug/unplug":
-                    if (!await RegisterBackgroundTask(new SystemTrigger(SystemTriggerType.PowerStateChange, false)))
-                        return; //TODO: print error and clear progress ring
-                    break;
-                case "Only wake/sleep":
-                    if (!await RegisterBackgroundTask(new SystemTrigger(SystemTriggerType.UserPresent, false), new SystemTrigger(SystemTriggerType.UserAway, false)))
-                        return; //TODO: print error and clear progress ring
-                    break;
-                case "All events":
-                    if (!await RegisterBackgroundTask(new SystemTrigger(SystemTriggerType.PowerStateChange, false), new SystemTrigger(SystemTriggerType.UserPresent, false),
-                        new SystemTrigger(SystemTriggerType.UserAway, false)))
-                        return;
-                    break;
+                new MessageDialog("Successfully registered").ShowAsync(); //TODO: use a checkmark ui instead, especially since this doesn't account for unregistering
             }
 
             ApplyProgressRing.IsActive = false;
             ApplyButton.IsEnabled = true;
+        }
+
+        private async void sendMessageDialog(string message)
+        {
+            MessageDialog messageDialog = new MessageDialog(message);
+            UICommand goToSystemSettingsCommand = new UICommand("Go to system settings") { Id = 0 };
+            messageDialog.Commands.Add(goToSystemSettingsCommand);
+            messageDialog.Commands.Add(new UICommand("Dismiss") { Id = 1 });
+            messageDialog.DefaultCommandIndex = 1;
+            messageDialog.CancelCommandIndex = 1;
+
+            IUICommand command = await messageDialog.ShowAsync();
+            //if (command == goToSystemSettingsCommand)
+            //    DeleteLogs();
         }
 
         

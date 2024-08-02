@@ -10,12 +10,10 @@
 
     <ScrollViewer>
         <StackPanel>
-            <ComboBox x:Name="TriggersComboBox" Header="Events to Monitor" Loaded="TriggersComboBox_Loaded" PlaceholderText="Loading...">
-                <x:String>None</x:String>
-                <x:String>All events</x:String>
-                <x:String>Only plug/unplug</x:String>
-                <x:String>Only wake/sleep</x:String>
-            </ComboBox>
+            <TextBlock Text="Record battery levels when..."/>
+            <CheckBox x:Name="PowerstateCheckbox" Content="charging or discharging"/>
+            <CheckBox x:Name="UserAwayCheckBox" Content="entering sleep mode"/>
+            <CheckBox x:Name="UserPresentCheckBox" Content="waking from sleep mode"/>
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="ApplyButton" Content="Register events" Click="ApplyButton_Click"/>
                 <ProgressRing x:Name="ApplyProgressRing"/>
