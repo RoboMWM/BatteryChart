@@ -32,7 +32,9 @@ namespace BackgroundTasks
             sb.Append(",");
             sb.Append(state);
             sb.Append(",");
-            sb.AppendLine(remaining);
+            sb.Append(remaining);
+            sb.Append(",");
+            sb.AppendLine(taskInstance.Task.Name.ToString());
 
             await WriteToFile("BatteryLog.csv", sb.ToString());
 
