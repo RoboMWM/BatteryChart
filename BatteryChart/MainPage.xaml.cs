@@ -112,5 +112,10 @@ namespace BatteryChart
             BatteryInfoStackPanel.Children.Add(pb);
             BatteryInfoStackPanel.Children.Add(pbPercent);
         }
+
+        private void SummariesButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(SummariesPage), null);
+        }
     }
 }

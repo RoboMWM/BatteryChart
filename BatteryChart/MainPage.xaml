@@ -19,6 +19,7 @@
     <ScrollViewer>
         <StackPanel x:Name="BatteryInfoStackPanel">
             <TextBlock x:Name="BatteryInfoTextBlock" Text="Loading..."/>
+            <Button x:Name="SummariesButton" Content="Generate Summaries" Click="SummariesButton_Click"/>
         </StackPanel>
     </ScrollViewer>
 
