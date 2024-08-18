@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BatteryChart;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,33 +37,9 @@ namespace BackgroundTasks
             sb.Append(",");
             sb.AppendLine(taskInstance.Task.Name.ToString());
 
-            await WriteToFile("BatteryLog.csv", sb.ToString());
+            await LogFileStuff.WriteToFile("BatteryLog.csv", sb.ToString());
 
             deferral.Complete();
-        }
-
-        private async Task WriteToFile(string fileName, string content)
-        {
-            try
-            {
-                StorageFolder localFolder = ApplicationData.Current.LocalFolder;
-                StorageFile file = await localFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
-
-                try
-                {
-                    await FileIO.AppendTextAsync(file, content);
-                }
-                catch (Exception e)
-                {
-                    StorageFile errorFile = await localFolder.CreateFileAsync("Err-" + fileName, CreationCollisionOption.OpenIfExists);
-                    await FileIO.AppendTextAsync(errorFile, content);
-                }
-            }
-
-            catch (Exception e)
-            {
-                //Nothing for now TODO: error log?
-            }
         }
     }
 }
