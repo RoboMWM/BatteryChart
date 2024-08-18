@@ -122,7 +122,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="LogBatteryToFileTask.cs" />
-    <Compile Include="LogFileStuff.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
