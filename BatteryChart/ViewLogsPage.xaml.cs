@@ -81,12 +81,12 @@ namespace BatteryChart
 
             IUICommand command = await deleteDialog.ShowAsync();
             if (command == deleteCommand)
-                DeleteLogs("BatteryLog.csv");
+                DeleteLogs();
         }
 
-        private async void DeleteLogs(string fileName)
+        private async void DeleteLogs()
         {
-            StorageFile logFile = await GetLogAsync(fileName);
+            StorageFile logFile = await GetLogAsync("BatteryLog.csv");
             if (logFile == null)
             {
                 await new MessageDialog("Log file is empty").ShowAsync();
